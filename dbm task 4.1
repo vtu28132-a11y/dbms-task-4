@@ -1,0 +1,164 @@
+Task — SQL Nested Queries
+🔍 Definition
+
+A nested query (or subquery) is a query written inside another SQL query.
+
+The inner query runs first and provides data to the outer query.
+
+Nested queries make it easier to solve complex problems in smaller, logical steps.
+
+When to Use Nested Queries
+
+Use a nested query when you need to:
+
+Retrieve data based on the result of another query.
+
+Perform filtering or aggregation without using JOINs.
+
+Simplify multi-step logical conditions.
+
+🧱 Sample Database Structure
+1️⃣ STUDENT Table
+S_ID	S_NAME	S_ADDRESS	S_PHONE	S_AGE
+S1	RAM	MUMBAI	9876543210	21
+S2	RAMESH	DELHI	8765432109	22
+S3	SURESH	KOLKATA	9123456780	23
+S4	RAJ	CHENNAI	20	
+2️⃣ COURSE Table
+C_ID	C_NAME	C_DURATION
+C1	DSA	4 months
+C2	JAVA	5 months
+C3	DBMS	3 months
+3️⃣ STUDENT_COURSE Table
+S_ID	C_ID
+S1	C1
+S2	C1
+S4	C3
+⚙️ Types of Nested Queries
+
+SQL supports two major types of nested queries:
+
+Type	Description
+Independent Subquery	Inner query runs first; results are passed to outer query.
+Correlated Subquery	Inner query depends on each row of the outer query.
+🧩 Independent Nested Queries
+Example 1 — Using IN
+
+Task: Find S_IDs of students enrolled in ‘DSA’ or ‘DBMS’.
+
+Step 1 – Inner Query
+SELECT C_ID FROM COURSE WHERE C_NAME IN ('DSA', 'DBMS');
+
+
+🧮 Result
+
+C_ID
+C1
+C3
+Step 2 – Outer Query
+SELECT S_ID FROM STUDENT_COURSE
+WHERE C_ID IN (
+  SELECT C_ID FROM COURSE WHERE C_NAME IN ('DSA', 'DBMS')
+);
+
+
+🧾 Output
+
+S_ID
+S1
+S2
+S4
+
+✅ Explanation:
+The inner query retrieves course IDs (C1, C3) for DSA and DBMS.
+The outer query then fetches student IDs enrolled in those courses.
+
+Example 2 — Using NOT IN
+
+Task: Retrieve IDs of students not enrolled in ‘DSA’ or ‘DBMS’.
+
+SELECT S_ID FROM STUDENT
+WHERE S_ID NOT IN (
+  SELECT S_ID FROM STUDENT_COURSE
+  WHERE C_ID IN (
+    SELECT C_ID FROM COURSE WHERE C_NAME IN ('DSA', 'DBMS')
+  )
+);
+
+
+🧾 Output
+
+S_ID
+S3
+
+✅ Explanation:
+Student S3 (SURESH) is not enrolled in either DSA or DBMS.
+
+🧠 Correlated Nested Queries
+Example 3 — Using EXISTS
+
+Task: Find names of students enrolled in the course with C_ID = 'C1'.
+
+SELECT S_NAME FROM STUDENT S
+WHERE EXISTS (
+  SELECT 1 FROM STUDENT_COURSE SC
+  WHERE S.S_ID = SC.S_ID AND SC.C_ID = 'C1'
+);
+
+
+🧾 Output
+
+S_NAME
+RAM
+RAMESH
+
+✅ Explanation:
+For each student in the STUDENT table, the subquery checks if a record exists in STUDENT_COURSE for C_ID = 'C1'.
+
+⚙️ Common Operators Used in Nested Queries
+Operator	Description	Example
+IN	Matches values from subquery result	WHERE dept_id IN (SELECT ...)
+NOT IN	Excludes values from subquery	WHERE emp_id NOT IN (SELECT ...)
+EXISTS	Checks if subquery returns any row	WHERE EXISTS (SELECT 1 ...)
+ANY	Compares with any value from subquery	> ANY (SELECT salary FROM ...)
+ALL	Compares with all values from subquery	> ALL (SELECT salary FROM ...)
+Example 4 — Using ANY
+
+Task: Retrieve student names whose age is greater than any student from DELHI.
+
+SELECT S_NAME FROM STUDENT
+WHERE S_AGE > ANY (
+  SELECT S_AGE FROM STUDENT WHERE S_ADDRESS = 'DELHI'
+);
+
+
+✅ Explanation:
+Finds students older than any (at least one) student living in Delhi.
+
+Example 5 — Using ALL
+
+Task: Retrieve student names whose age is greater than all students from DELHI.
+
+SELECT S_NAME FROM STUDENT
+WHERE S_AGE > ALL (
+  SELECT S_AGE FROM STUDENT WHERE S_ADDRESS = 'DELHI'
+);
+
+
+✅ Explanation:
+Finds students older than every student from Delhi.
+
+📚 Summary Table
+Type	Keyword	Example
+Independent	IN, NOT IN, ANY, ALL	Use when inner query is standalone
+Correlated	EXISTS	Use when inner query depends on outer query
+
+✅ Final Summary
+
+Nested queries make SQL modular, flexible, and powerful.
+
+Independent subqueries run once, correlated subqueries run per row.
+
+Operators like IN, NOT IN, EXISTS, ANY, ALL add versatility.
+
+Used widely for filtering, aggregation, and complex data retrieval.
