@@ -1,0 +1,243 @@
+Part 1 — Employee, Department & Sales Tables
+Table Structures
+
+Employees Table
+
+emp_id	emp_name	dept_id
+1	John	1
+2	Mary	2
+3	Bob	1
+4	Alice	3
+5	Tom	1
+
+Department Table
+
+dept_id	dept_name
+1	Sales
+2	Marketing
+3	Finance
+
+Sales Table
+
+sale_id	emp_id	sale_amt
+1	1	1000
+2	2	2000
+3	3	3000
+4	1	4000
+5	5	5000
+6	3	6000
+7	2	7000
+1️⃣ Find the names of all employees in the Sales department.
+SELECT emp_name
+FROM Employees
+WHERE dept_id = (
+  SELECT dept_id FROM Department WHERE dept_name = 'Sales'
+);
+
+
+✅ Explanation:
+The inner query finds the dept_id for Sales, and the outer query retrieves all employees in that department.
+
+🧾 Output:
+
+emp_name
+John
+Bob
+Tom
+2️⃣ Find the names of all employees who have made a sale.
+SELECT emp_name
+FROM Employees
+WHERE emp_id IN (
+  SELECT DISTINCT emp_id FROM Sales
+);
+
+
+✅ Explanation:
+The subquery finds all employee IDs who appear in the Sales table, then we display their names.
+
+🧾 Output:
+
+emp_name
+John
+Mary
+Bob
+Tom
+3️⃣ Find the names of all employees who have made sales greater than $1000.
+SELECT emp_name
+FROM Employees
+WHERE emp_id IN (
+  SELECT DISTINCT emp_id FROM Sales
+  WHERE sale_amt > 1000
+);
+
+
+✅ Explanation:
+The subquery gets emp_ids who have made sales > 1000, and the outer query retrieves their names.
+
+🧾 Output:
+
+emp_name
+Mary
+Bob
+John
+Tom
+Part 2 — Student, Course, and Student_Course Tables
+Table Structures
+
+Student Table
+
+s_id	s_name	s_address	s_phone	s_age
+S1	Ram	Delhi	9874563211	18
+S2	Ramesh	Mumbai	8883214569	18
+S3	Sujit	Chennai	7214589632	20
+S4	Suresh	Delhi	9842155633	18
+
+Course Table
+
+c_id	c_name
+C1	Sales
+C2	Marketing
+C3	Finance
+
+Student_Course Table
+
+s_id	c_id
+S1	C1
+S1	C3
+S2	C1
+S3	C2
+S4	C2
+S4	C3
+
+Note: The following questions mention DSA and DBMS — but since in this dataset courses are Sales, Marketing, Finance, we’ll answer with course names replaced as applicable.
+
+1️⃣ Find the S_IDs of students who are enrolled in the courses ‘DSA’ or ‘DBMS’.
+
+👉 (Assuming DSA = C1 (Sales) and DBMS = C3 (Finance))
+
+SELECT s_id
+FROM Student_Course
+WHERE c_id IN (
+  SELECT c_id FROM Course WHERE c_name IN ('Sales', 'Finance')
+);
+
+
+🧾 Output:
+
+s_id
+S1
+S2
+S4
+2️⃣ Find the names of students who are enrolled in the course with C_ID = 'C1'.
+SELECT s_name
+FROM Student
+WHERE s_id IN (
+  SELECT s_id FROM Student_Course WHERE c_id = 'C1'
+);
+
+
+🧾 Output:
+
+s_name
+Ram
+Ramesh
+3️⃣ Retrieve student names who enrolled in ‘DSA’ or ‘DBMS’.
+SELECT s_name
+FROM Student
+WHERE s_id IN (
+  SELECT s_id FROM Student_Course
+  WHERE c_id IN (
+    SELECT c_id FROM Course WHERE c_name IN ('Sales', 'Finance')
+  )
+);
+
+
+🧾 Output:
+
+s_name
+Ram
+Ramesh
+Suresh
+4️⃣ Retrieve student IDs not enrolled in ‘DSA’ or ‘DBMS’.
+SELECT s_id
+FROM Student
+WHERE s_id NOT IN (
+  SELECT s_id FROM Student_Course
+  WHERE c_id IN (
+    SELECT c_id FROM Course WHERE c_name IN ('Sales', 'Finance')
+  )
+);
+
+
+🧾 Output:
+
+s_id
+S3
+5️⃣ Find student names enrolled in ‘DSA’.
+
+👉 (DSA = ‘Sales’ = C1)
+
+SELECT s_name
+FROM Student
+WHERE EXISTS (
+  SELECT 1 FROM Student_Course
+  WHERE Student.s_id = Student_Course.s_id
+  AND c_id = 'C1'
+);
+
+
+🧾 Output:
+
+s_name
+Ram
+Ramesh
+6️⃣ Compare the output of ANY and ALL operators
+Query A (ANY):
+SELECT s_name FROM Student
+WHERE s_age > ANY (
+  SELECT s_age FROM Student WHERE s_address = 'Delhi'
+);
+
+
+👉 Delhi students’ ages = [18, 18].
+So, > ANY (18, 18) → age > 18.
+
+🧾 Output:
+
+s_name
+Sujit
+Query B (ALL):
+SELECT s_name FROM Student
+WHERE s_age > ALL (
+  SELECT s_age FROM Student WHERE s_address = 'Delhi'
+);
+
+
+👉 > ALL (18, 18) → also means age > 18.
+
+🧾 Output:
+
+s_name
+Sujit
+
+✅ Observation:
+Both queries give the same result in this dataset since all Delhi students have the same age (18).
+
+If Delhi students had different ages (e.g., 18 and 20),
+
+> ANY means greater than at least one age → more inclusive.
+
+> ALL means greater than all ages → more restrictive.
+
+✅ FINAL SUMMARY TABLE
+
+Query	Description	Type	Result
+Employee #1	Employees in Sales dept	Independent	John, Bob, Tom
+Employee #2	Employees with any sale	Independent	John, Mary, Bob, Tom
+Employee #3	Sales > 1000	Independent	Mary, Bob, John, Tom
+Student #1	Students in Sales/Finance	Independent	S1, S2, S4
+Student #2	Students in C1	Independent	Ram, Ramesh
+Student #3	Names in Sales/Finance	Independent	Ram, Ramesh, Suresh
+Student #4	Not in Sales/Finance	Independent	S3
+Student #5	Enrolled in Sales	Correlated	Ram, Ramesh
+Student #6	ANY vs ALL age	Comparison	Both return Sujit
